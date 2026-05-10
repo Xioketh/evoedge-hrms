@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  HR_DIRECTOR
+  HR_MANAGER
+  HR_EXECUTIVE
+  TREASURY
+  HOD
+  EMPLOYEE
+}
+
+model Company {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  domain      String?      @unique
+  
+  users       User[]
+  departments Department[]
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Department {
+  id          String            @id @default(cuid())
+  name        String
+  
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  profiles    EmployeeProfile[] 
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([name, companyId]) 
+}
+
+model User {
+  id          String           @id @default(cuid())
+  email       String           @unique
+  password    String           // Ensure this is hashed (e.g., bcrypt/argon2)
+  role        Role             @default(EMPLOYEE)
+  
+  // Tenant Isolation
+  companyId   String
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  profile     EmployeeProfile?
+  
+  // Soft Delete - Critical for HRM audit trails
+  isActive    Boolean          @default(true)
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Composite index to speed up tenant-specific queries
+  @@index([companyId, email])
+}
+
+model EmployeeProfile {
+  id           String      @id @default(cuid())
+  firstName    String
+  lastName     String
+  employeeCode String?     // Generated during onboarding
+  
+  // 1:1 Identity Relation
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Domain Relations
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  // Self-relation: Crucial for an HRM to establish reporting hierarchies
+  managerId    String?
+  manager      EmployeeProfile?  @relation("ReportingLine", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates EmployeeProfile[] @relation("ReportingLine")
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Enforce unique employee codes per company, not globally, to prevent collisions across tenants
+  @@unique([employeeCode, userId]) 
+}
