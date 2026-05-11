@@ -3,6 +3,8 @@ import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { db } from '@/src/core/db/db.client';
 import bcrypt from 'bcryptjs';
+import { SignupInput } from '../../types/schemas/auth.schema';
+import { Role } from '@prisma/client';
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod'
@@ -69,3 +71,65 @@ export async function verifyCredentials(email: string, password: string) {
     companyId: user.companyId, // Included from our multi-tenant SaaS update!
   };
 }
+
+export const registerTenant = async (data: SignupInput) => {
+  // 1. Pre-flight check: Ensure user doesn't already exist globally
+  const existingUser = await db.user.findUnique({ 
+    where: { email: data.email } 
+  });
+  
+  if (existingUser) {
+    throw new Error('A user with this email already exists.');
+  }
+
+  // 2. Hash the password securely
+  const hashedPassword = await bcrypt.hash(data.password, 12);
+
+  // 3. Execute the Transaction
+  // If anything in this block fails, the database rolls back to its prior state.
+  const result = await db.$transaction(async (tx) => {
+    
+    // Step A: Create the Company
+    const company = await tx.company.create({
+      data: {
+        name: data.companyName,
+      },
+    });
+
+    // Step B: Create the Departments
+    // Using createMany for bulk insertion efficiency
+    await tx.department.createMany({
+      data: data.departments.map((deptName) => ({
+        name: deptName,
+        companyId: company.id,
+      })),
+    });
+
+    // Step C: Create the User and EmployeeProfile via nested writes
+    const user = await tx.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        role: Role.HR_DIRECTOR, // Hardcoded per your requirement
+        companyId: company.id,
+        profile: {
+          create: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            // departmentId is left null intentionally. As HR Director, 
+            // they can assign themselves to a specific department later in the UI.
+          },
+        },
+      },
+      // Return the created profile and company data if the frontend needs it
+      include: {
+        profile: true,
+        company: true,
+      },
+    });
+
+    return user;
+  });
+
+  return result;
+};

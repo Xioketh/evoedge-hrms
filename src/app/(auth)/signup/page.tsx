@@ -1,9 +1,8 @@
-// src/app/(auth)/login/page.tsx
+// src/app/(auth)/signup/page.tsx
 
-import LoginForm from "@/src/components/features/auth/LoginForm";
+import SignupForm from "@/src/components/features/auth/SignupForm";
 
-
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -12,13 +11,12 @@ export default function LoginPage() {
             EvoEdge HRMS
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
+            Sign up to your account
           </p>
         </div>
-        
+
         {/* Render the separated form component here */}
-        <LoginForm />
-        
+        <SignupForm />
       </div>
     </div>
   );
