@@ -1,25 +1,32 @@
 // src/app/(auth)/login/page.tsx
 
 import LoginForm from "@/src/components/features/auth/LoginForm";
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center space-y-2 mt-2">
+          <CardTitle className="text-3xl font-extrabold tracking-tight">
             EvoEdge HRMS
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          </CardTitle>
+          <CardDescription>
             Sign in to your account
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
         
-        {/* Render the separated form component here */}
-        <LoginForm />
-        
-      </div>
+        <CardContent>
+          <LoginForm />
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
