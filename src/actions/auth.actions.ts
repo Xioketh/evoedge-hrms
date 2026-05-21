@@ -1,60 +1,86 @@
-'use server';
+// src/actions/auth.actions.ts
+"use server";
+import {
+  createSession,
+  verifyCredentials,
+  registerTenant,
+} from "@/src/core/services/auth.service";
+import { z } from "zod";
+import { ActionState } from "../types/action.types";
+import { LoginSchema, SignupSchema } from "../types/schemas/auth.schema";
 
-import { createSession, verifyCredentials } from '@/src/core/services/auth.service';
-import { redirect } from 'next/navigation';
-import { SignupSchema } from '../types/schemas/auth.schema';
-import { registerTenant } from '../core/services/auth.service';
+export async function loginAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const rawData = Object.fromEntries(formData.entries());
+  try {
+    const validatedData = LoginSchema.parse(rawData);
 
+    const validUser = await verifyCredentials(
+      validatedData.email,
+      validatedData.password,
+    );
 
-export async function handleLogin(formData: FormData) {
-  let email = formData.get('email') as string;
-  let password = formData.get('password') as string;
+    if (!validUser) {
+      return {
+        success: false,
+        message: "Invalid email or password",
+        inputs: rawData,
+      };
+    }
 
-  email = "sarah.director@evoedge.com"
-  password = "Owner@123"
-  if (!email || !password) throw new Error('Missing fields');
-
-  const validUser = await verifyCredentials(email, password);
-  
-  if (!validUser) {
-    throw new Error('Invalid credentials'); 
+    await createSession({
+      userId: validUser.id,
+      role: validUser.role,
+      companyId: validUser.companyId,
+      firstName: validUser.firstName,
+      lastName: validUser.lastName,
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        fieldErrors: error.flatten().fieldErrors,
+        inputs: rawData,
+      };
+    }
+    return {
+      success: false,
+      message: error.message || "An unexpected error occurred",
+      inputs: rawData,
+    };
   }
 
-await createSession({
-    userId: validUser.id,
-    role: validUser.role,
-    companyId: validUser.companyId,
-  });
-
-  redirect('/dashboard');
+  return { success: true };
 }
 
-export async function signupAction(formData: FormData) {
+export async function signupAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const rawData = Object.fromEntries(formData.entries());
   try {
-    // 1. Extract raw data from FormData
-    const rawData = {
-      companyName: formData.get('companyName'),
-      departments: formData.get('departments'),
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-    };
-
-    // 2. Validate against Zod Schema
     const validatedData = SignupSchema.parse(rawData);
-
-    // 3. Hand off to Core Service
     const newUser = await registerTenant(validatedData);
 
-    // 4. Return success state (You would typically handle session creation/JWT here)
-    return { success: true, userId: newUser.id };
-
+    return {
+      success: true,
+      data: { userId: newUser.id },
+      message: "Account created successfully",
+    };
   } catch (error: any) {
-    // Handle Zod validation errors or Service errors (like duplicate emails)
-    return { 
-      success: false, 
-      error: error.errors ? error.errors[0].message : (error.message || "An unexpected error occurred") 
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        fieldErrors: error.flatten().fieldErrors,
+        inputs: rawData,
+      };
+    }
+    return {
+      success: false,
+      message: error.message || "Failed to create account",
+      inputs: rawData,
     };
   }
 }

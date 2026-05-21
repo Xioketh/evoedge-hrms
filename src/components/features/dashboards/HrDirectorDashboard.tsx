@@ -1,12 +1,8 @@
-import { SessionPayload } from '@/src/core/services/auth.service';
+import { SessionProps } from '@/src/types/session.types';
 import React from 'react';
 
-// Define the prop type expected from your session
-interface DashboardProps {
-  user: SessionPayload;
-}
 
-export function HrDirectorDashboard({ user }: DashboardProps) {
+export function HrDirectorDashboard({ user }: SessionProps) {
   // Dummy Data
   const metrics = [
     { label: "Total Employees", value: "142", trend: "+3 this month" },

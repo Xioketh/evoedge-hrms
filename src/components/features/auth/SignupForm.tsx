@@ -1,80 +1,112 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { signupAction } from '@/src/actions/auth.actions';
-// Import your UI components (e.g., Button, Input) from '@/components/ui/...'
+import { useEffect, Fragment } from "react";
+import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { signupAction } from "@/src/actions/auth.actions";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Text } from "../../ui/text";
+import { SIGNUP_FORM_FIELDS } from "@/src/constants/auth.constants";
+import { toast } from "sonner";
+import { initialState } from "@/src/types/auth.types";
 
 export default function SignupForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [state, action, isPending] = useActionState(signupAction, initialState);
 
-  async function clientAction(formData: FormData) {
-    setIsPending(true);
-    setError(null);
-    
-    const result = await signupAction(formData);
-    
-    if (!result.success) {
-      setError(result.error);
-      setIsPending(false);
-      return;
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Welcome to HR Workspace 🎉", {
+        description: "Your company account has been created successfully. You can now sign in and start managing your team.",
+      });
+      router.push("/login");
+    } else if (state.message) {
+      toast.error("Registration Failed", {
+        description: state.message,
+      });
     }
-
-    // On success, redirect to the new dashboard
-    router.push('/dashboard'); 
-  }
+  }, [state, router]);
 
   return (
-    <form action={clientAction} className="space-y-6 max-w-md w-full">
-      {error && <div className="p-3 text-red-500 bg-red-50 rounded-md text-sm">{error}</div>}
+    <div className="flex flex-col items-center justify-center p-6 bg-background w-full h-full">
+      <Card className="w-full max-w-[520px] border-none">
+        <CardHeader className="space-y-2 pb-8">
+          <CardTitle>Create Your Account</CardTitle>
+          <CardDescription>
+            Set up your HR workspace and manage your organization easily.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={action}>
+            <div className="grid grid-cols-2 gap-4">
+              {SIGNUP_FORM_FIELDS.map((field) => (
+                <Fragment key={field.name}>
+                  {field.dividerBefore && (
+                    <div className="col-span-2 my-2">
+                      <hr />
+                    </div>
+                  )}
+                  <div
+                    className={field.halfWidth ? "col-span-1" : "col-span-2"}
+                  >
+                    <Text size={"1"}>{field.label}</Text>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                      minLength={field.minLength}
+                      className="mt-1"
+                      defaultValue={state.inputs?.[field.name] as string || ""}
+                    />
+                    
+                    {/* Zod Field-Level Error Display */}
+                    {state.fieldErrors?.[field.name] ? (
+                      <p className="mt-1 text-xs text-red-500">
+                        {state.fieldErrors[field.name][0]}
+                      </p>
+                    ) : field.hint ? (
+                      <p className="mt-1 text-xs text-gray-500">{field.hint}</p>
+                    ) : null}
 
-      <div className="space-y-4">
-        {/* Company Details */}
-        <div>
-          <label htmlFor="companyName" className="block text-sm font-medium text-black">Company Name</label>
-          <input type="text" id="companyName" name="companyName" required className="mt-1 block w-full border rounded-md p-2" />
-        </div>
-        
-        <div>
-          <label htmlFor="departments" className="block text-sm font-medium text-black">Departments (Comma separated)</label>
-          <input type="text" id="departments" name="departments" placeholder="HR, IT, Finance, Sales" required className="mt-1 block w-full border rounded-md p-2" />
-          <p className="text-xs text-gray-500 mt-1">Example: Engineering, Marketing, Operations</p>
-        </div>
+                  </div>
+                </Fragment>
+              ))}
+            </div>
 
-        <hr className="my-4" />
-
-        {/* User Details */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-black">First Name</label>
-            <input type="text" id="firstName" name="firstName" required className="mt-1 block w-full border rounded-md p-2" />
+            <Button
+              type="submit"
+              variant={"default"}
+              size={"default"}
+              className="w-full mt-6"
+              disabled={isPending}
+            >
+              {isPending ? "Creating Workspace..." : "Create Account"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center justify-center space-y-2 pt-6 border-t border-border/50">
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Text size={"1"}>
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Sign In
+              </Link>
+            </Text>
           </div>
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-black">Last Name</label>
-            <input type="text" id="lastName" name="lastName" required className="mt-1 block w-full border rounded-md p-2" />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-black">Work Email</label>
-          <input type="email" id="email" name="email" required className="mt-1 block w-full border rounded-md p-2" />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-black">Password</label>
-          <input type="password" id="password" name="password" required minLength={8} className="mt-1 block w-full border rounded-md p-2" />
-        </div>
-      </div>
-
-      <button 
-        type="submit" 
-        disabled={isPending}
-        className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isPending ? 'Creating Workspace...' : 'Create Workspace & Account'}
-      </button>
-    </form>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

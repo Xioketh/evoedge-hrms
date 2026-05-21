@@ -5,7 +5,7 @@ export const metadata = {
   title: "Salery Management | EvoEdge HRMS",
 };
 
-export default async function SaleryPage() {
+export default async function PayrollPage() {
   const session = await getSession();
   
   if (!session) redirect("/login");

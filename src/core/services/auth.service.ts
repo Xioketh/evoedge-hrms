@@ -5,16 +5,11 @@ import { db } from '@/src/core/db/db.client';
 import bcrypt from 'bcryptjs';
 import { SignupInput } from '../../types/schemas/auth.schema';
 import { Role } from '@prisma/client';
+import { SessionPayload } from '@/src/types/session.types';
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod'
 );
-
-export type SessionPayload = {
-  userId: string;
-  role: string;
-  companyId: string;
-};
 
 export async function createSession(payload: SessionPayload) {
   const token = await new SignJWT(payload)
@@ -54,7 +49,7 @@ export async function verifyCredentials(email: string, password: string) {
   // 1. Fetch from Database
   const user = await db.user.findUnique({ 
     where: { email },
-    select: { id: true, password: true, role: true, companyId: true } 
+    select: { id: true, password: true, role: true, companyId: true, profile: { select: { firstName: true, lastName: true } } }
   });
   
   if (!user) return null;
@@ -68,7 +63,9 @@ export async function verifyCredentials(email: string, password: string) {
   return {
     id: user.id,
     role: user.role,
-    companyId: user.companyId, // Included from our multi-tenant SaaS update!
+    companyId: user.companyId,
+    firstName: user.profile?.firstName || '',
+    lastName: user.profile?.lastName || '',
   };
 }
 

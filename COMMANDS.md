@@ -1,3 +1,3 @@
 npx prisma db seed
 
-npm prisma migrate dev --name init_hrms
+npx prisma migrate dev --name init_hrms
