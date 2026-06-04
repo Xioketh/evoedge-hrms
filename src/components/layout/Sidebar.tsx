@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "../icons/logo";
-import { BOTTOM_NAV_ITEMS, NAVIGATION_ITEMS } from "@/src/constants/sidebar.constants";
-
-
+import {
+  BOTTOM_NAV_ITEMS,
+  NAVIGATION_ITEMS,
+} from "@/src/constants/sidebar.constants";
 
 export function Sidebar({ userRole }: { userRole: string }) {
   console.log("User Role in Sidebar:", userRole); // Debugging line
@@ -25,8 +26,8 @@ export function Sidebar({ userRole }: { userRole: string }) {
       <nav className="flex flex-col gap-1 flex-1 overflow-y-auto p-1  ">
         {authorizedNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
-
+          const isActive =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.name}

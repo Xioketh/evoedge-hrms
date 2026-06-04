@@ -18,7 +18,7 @@ export const NAVIGATION_ITEMS = [
   },
   {
     name: "Employee",
-    href: "/",
+    href: "/employee",
     icon: Users,
     roles: ["HR_DIRECTOR", "manager"],
   },
@@ -28,7 +28,7 @@ export const NAVIGATION_ITEMS = [
     icon: Banknote,
     roles: ["HR_DIRECTOR", "finance"],
   },
-  { name: "Lead", href: "/", icon: Briefcase, roles: ["HR_DIRECTOR", "sales"] },
+  { name: "Lead", href: "/lead", icon: Briefcase, roles: ["HR_DIRECTOR", "sales"] },
   {
     name: "Leaves",
     href: "/leaves",
@@ -37,17 +37,17 @@ export const NAVIGATION_ITEMS = [
   },
   {
     name: "Resignation",
-    href: "/",
+    href: "/resignation",
     icon: LogOut,
     roles: ["HR_DIRECTOR", "employee"],
   },
-  { name: "Settings", href: "/", icon: Settings, roles: ["HR_DIRECTOR"] },
+  { name: "Settings", href: "/settings", icon: Settings, roles: ["HR_DIRECTOR"] },
 ];
 
 export const BOTTOM_NAV_ITEMS = [
   {
     name: "Help & Support",
-    href: "/",
+    href: "/help",
     icon: HelpCircle,
     roles: ["HR_DIRECTOR", "manager", "employee", "finance", "sales"],
   },
