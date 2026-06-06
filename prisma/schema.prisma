@@ -16,6 +16,7 @@ enum Role {
 }
 
 enum OfferStatus {
+  QUEUED
   DRAFT                // Saved, but never attempted to send
   SEND_FAILED          // n8n/Email failed. Needs admin to click "Resend"
   SENT                 // Email successful. Waiting for candidate to respond

@@ -12,7 +12,7 @@ export const JobOfferRepository = {
         ...data,
         targetStartDate: new Date(data.targetStartDate),
         companyId,
-        status: OfferStatus.DRAFT,
+        status: OfferStatus.QUEUED,
       },
     });
   },

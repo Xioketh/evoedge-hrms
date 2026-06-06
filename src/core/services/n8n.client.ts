@@ -1,8 +1,11 @@
+import { WORKFLOW_CALLBACK_MAP } from "@/src/constants/n8n.constant";
 import { N8nWorkflow } from "@/src/types/n8n.types";
 
 // Pull these from your .env file
 const N8N_BASE_URL = process.env.N8N_WEBHOOK_URL;
 const N8N_AUTH_TOKEN = process.env.N8N_AUTH_TOKEN;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const N8N_CALLBACK_SECRET = process.env.N8N_CALLBACK_SECRET;
 
 export async function triggerWorkflow<T>(workflow: N8nWorkflow, payload: T) {
   if (!N8N_BASE_URL) {
@@ -10,16 +13,24 @@ export async function triggerWorkflow<T>(workflow: N8nWorkflow, payload: T) {
   }
 
   const endpoint = `${N8N_BASE_URL}/${workflow}`;
+  const callbackPath = WORKFLOW_CALLBACK_MAP[workflow];
+
+  const enrichedPayload = {
+    ...payload,
+    ...(callbackPath && {
+      callbackUrl: `${APP_URL}${callbackPath}`,
+      callbackSecret: N8N_CALLBACK_SECRET,
+    }),
+  };
 
   try {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Secure your webhooks so random internet scanners can't trigger your workflows
         "Authorization": `Bearer ${N8N_AUTH_TOKEN}`, 
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(enrichedPayload),
     });
 
     if (!response.ok) {

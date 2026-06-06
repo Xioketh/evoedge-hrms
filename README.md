@@ -1,52 +1,108 @@
-evoedge-hrms/
-├── prisma/                             # Database schema and migrations
-│   └── schema.prisma
-├── src/
-│   ├── app/                            # 1. THE PRESENTATION LAYER (Next.js)
-│   │   ├── (auth)/                     # Route groups for layout management
-│   │   │   └── login/page.tsx
-│   │   ├── (dashboard)/                // Route group sharing the Sidebar/Header layout
-│   │   │   ├── layout.tsx              // The master layout (Sidebar + Header)
-│   │   │   │
-│   │   │   ├── dashboard/              // URL: /dashboard (The Unified Home)
-│   │   │   │   └── page.tsx            // The switch statement routing to features
-│   │   │   │
-│   │   │   └── leaves/                 // URL: /leaves (Answers your question!)
-│   │   │       └── page.tsx
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   ├── api/                        # Thin API endpoints for external clients (e.g., n8n)
-│   │       └── webhooks/n8n/route.ts
-│   │
-│   ├── actions/ 
-│   │       ├── leave.actions.ts
-│   │       └── payroll.actions.ts
-│   ├── components/                     # 2. THE UI LAYER
-│   │   ├── ui/                         # Dumb, reusable components (buttons, modals)
-│   │   └── features/                   # Smart, domain-specific components
-│   │       ├── payroll/PayrollGrid.tsx
-│   │       └── onboarding/CandidateForm.tsx
-│   │
-│   ├── core/                           # 3. THE EXTRACTION ZONE (Your Future Backend)
-│   │   ├── services/                   # Pure business logic (No Next.js imports!)
-│   │   │   ├── eosCalculator.service.ts
-│   │   │   ├── payroll.service.ts
-│   │   │   ├── leave.service.ts
-│   │   │   └── onboarding.service.ts
-│   │   ├── integrations/               # Wrappers for external APIs
-│   │   │   ├── aws-s3.client.ts
-│   │   │   ├── aws-textract.client.ts
-│   │   │   └── n8n-webhook.client.ts
-│   │   ├── db/                         # Database connection and repository pattern
-│   │   │   └── db.client.ts            # (e.g., Prisma singleton)
-│   │   └── utils/                      # Pure helper functions
-│   │       └── financialMath.utils.ts  # Gratuity and prorated math formulas
-│   │
-│   └── types/                          # 4. SHARED TYPES
-│       ├── schemas/                    # Zod validation schemas
-│       │   └── payroll.schema.ts
-│       └── index.d.ts
-│
-├── docker-compose.yml                  # VPS infrastructure (Postgres, PgBouncer, n8n)
-├── middleware.ts                       # Next.js RBAC routing protection
-└── package.json
+# EvoEdge HRMS
+
+## Project folder structure
+
+- `app/`
+  - `globals.css`
+  - `layout.tsx`
+  - `page.tsx`
+  - `(auth)/`
+    - `login/page.tsx`
+    - `signup/page.tsx`
+  - `(dashboards)/`
+    - `layout.tsx`
+    - `dashboard/page.tsx`
+    - `employee/page.tsx`
+    - `help/page.tsx`
+    - `lead/page.tsx`
+    - `lead/create/page.tsx`
+    - `leaves/page.tsx`
+    - `payroll/page.tsx`
+    - `resignation/page.tsx`
+    - `settings/page.tsx`
+  - `components/`
+    - `common/`
+      - `searchable-dropdown.tsx`
+    - `features/`
+      - `auth/`
+        - `AuthBranding.tsx`
+        - `LoginForm.tsx`
+        - `SignupForm.tsx`
+      - `dashboards/`
+        - `EmployeeDashboard.tsx`
+        - `HodDashboard.tsx`
+        - `HrDirectorDashboard.tsx`
+      - `leads/`
+        - `CreateOfferForm.tsx`
+        - `create-offer/`
+          - `CompensationSection.tsx`
+          - `...`
+      - `leaves/`
+        - `LeaveRequestsGrid.tsx`
+    - `icons/`
+      - `logo.tsx`
+    - `layout/`
+      - `Header.tsx`
+      - `PageHeader.tsx`
+      - `Sidebar.tsx`
+    - `ui/`
+      - `alert-dialog.tsx`
+      - `button.tsx`
+      - `card.tsx`
+      - `command.tsx`
+      - `confirm-modal.tsx`
+      - `dialog.tsx`
+      - `input-group.tsx`
+      - `input.tsx`
+      - `popover.tsx`
+      - `select.tsx`
+      - `sonner.tsx`
+      - `text.tsx`
+      - `textarea.tsx`
+- `config/`
+  - `routes.ts`
+- `constants/`
+  - `auth.constants.ts`
+  - `offer.constants.ts`
+  - `sidebar.constants.ts`
+- `core/`
+  - `db/`
+    - `db.client.ts`
+  - `repositories/`
+    - `company.repository.ts`
+    - `department.repository.ts`
+    - `employee.repository.ts`
+    - `jobOffer.repository.ts`
+    - `user.repository.ts`
+  - `services/`
+    - `auth.service.ts`
+    - `n8n.client.ts`
+    - `offer.service.ts`
+- `lib/`
+  - `utils.ts`
+- `types/`
+  - `action.types.ts`
+  - `auth.types.ts`
+  - `n8n.types.ts`
+  - `offer.types.ts`
+  - `session.types.ts`
+  - `schemas/`
+    - `auth.schema.ts`
+    - `offer.schema.ts`
+- `prisma/`
+  - `schema.prisma`
+  - `seed.ts`
+  - `migrations/`
+- `public/`
+  - `icon/`
+- `package.json`
+- `tsconfig.json`
+- `next.config.ts`
+- `eslint.config.mjs`
+- `postcss.config.mjs`
+- `next-env.d.ts`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `COMMANDS.md`
+- `components.json`
+- `README.md`
