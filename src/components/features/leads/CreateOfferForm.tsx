@@ -27,6 +27,7 @@ export default function CreateOfferForm({ departments, managers }: CreateOfferFo
       router.push("/lead");
     } else if (state.message) {
       toast.error(state.message);
+      router.push("/lead");
     }
   }, [state, router]);
 

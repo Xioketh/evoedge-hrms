@@ -74,6 +74,8 @@ model User {
   company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   profile     EmployeeProfile?
+
+  createdOffers   JobOffer[]     @relation("OfferCreator")
   
   // Soft Delete - Critical for HRM audit trails
   isActive    Boolean          @default(true)
@@ -144,6 +146,9 @@ model JobOffer {
   departmentId    String?
   department      Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   
+  createdById     String?
+  createdBy       User?          @relation("OfferCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
   managerId       String?
   manager         EmployeeProfile? @relation("OfferManager", fields: [managerId], references: [id], onDelete: SetNull)
 

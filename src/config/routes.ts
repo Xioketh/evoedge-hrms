@@ -1,6 +1,10 @@
 export type PageHeaderData = {
   title: string;
   description: string;
+  action?: {
+    label: string;
+    href: string;
+  };
 };
 
 export const PAGE_HEADERS: Record<string, PageHeaderData> = {
@@ -22,11 +26,19 @@ export const PAGE_HEADERS: Record<string, PageHeaderData> = {
   },
    "/lead": {
     title: "Lead Management",
-    description: "Manage and track sales leads.",
+    description: "Manage and track employee offer letters and responses.",
+    action: {
+      label: "Create Offer",
+      href: "/lead/create",
+    },
   }, 
   "/lead/create": {
     title: "Offer Letter Generation",
     description: "",
+     action: {
+      label: "Lead List",
+      href: "/lead",
+    },
   },
   "/resignation": {
     title: "Resignation Management",
