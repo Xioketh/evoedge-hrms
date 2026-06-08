@@ -2,12 +2,12 @@
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { formatDate } from "@/src/lib/formatters";
-import { Eye, Download, Mail } from "lucide-react";
+import { Eye, Download, UserCheck } from "lucide-react";
 import { Text } from "@/src/components/ui/text";
 import { DataTable } from "@/src/components/ui/data-table";
 import { Card } from "@/src/components/ui/card";
 import { SafeJobOffer } from "@/src/types/offer.types";
-import { OfferStatusBadge } from "./OfferStatusBadge"; // Import the new component
+import { OfferStatusBadge } from "./OfferStatusBadge";
 
 interface OfferDataTableProps {
   data: SafeJobOffer[];
@@ -69,11 +69,10 @@ const columns = [
     header: "ACTIONS",
     cell: ({ row }) => (
       <div className="flex gap-3 text-muted-foreground">
-        <Eye className="size-4 cursor-pointer hover:text-foreground" />
-        {row.original.status === "SENT" ? (
-          <Mail className="size-4 cursor-pointer hover:text-primary" />
-        ) : (
-          <Download className="size-4 cursor-pointer hover:text-primary" />
+        <Eye className="size-5 cursor-pointer hover:text-foreground" />
+        <Download className="size-5 cursor-pointer hover:text-primary" />
+        {row.original.status === "CANDIDATE_ACCEPTED" && (
+          <UserCheck className="size-5 cursor-pointer text-emerald-600 hover:text-emerald-700 transition-colors" />
         )}
       </div>
     ),
