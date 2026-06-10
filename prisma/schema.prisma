@@ -69,21 +69,20 @@ model User {
   password    String           // Ensure this is hashed (e.g., bcrypt/argon2)
   role        Role             @default(EMPLOYEE)
   
-  // Tenant Isolation
   companyId   String
   company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   
   profile     EmployeeProfile?
 
   createdOffers   JobOffer[]     @relation("OfferCreator")
+  completedOffers JobOffer[] @relation("OfferCompleter")
   
-  // Soft Delete - Critical for HRM audit trails
   isActive    Boolean          @default(true)
   
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
-  // Composite index to speed up tenant-specific queries
   @@index([companyId, email])
 }
 
@@ -91,17 +90,19 @@ model EmployeeProfile {
   id           String      @id @default(cuid())
   firstName    String
   lastName     String
-  employeeCode String?     // Generated during onboarding
+  employeeCode String?   @unique
+
+  jobTitle       String?
+  employmentType EmploymentType @default(FULL_TIME)
+
+  baseSalary Decimal? @db.Decimal(12, 2)
   
-  // 1:1 Identity Relation
   userId       String      @unique
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Domain Relations
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  // Self-relation: Crucial for an HRM to establish reporting hierarchies
   managerId    String?
   manager      EmployeeProfile?  @relation("ReportingLine", fields: [managerId], references: [id], onDelete: SetNull)
   subordinates EmployeeProfile[] @relation("ReportingLine")
@@ -109,55 +110,47 @@ model EmployeeProfile {
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  
-  // Enforce unique employee codes per company, not globally, to prevent collisions across tenants
-  @@unique([employeeCode, userId]) 
 }
 
 model JobOffer {
   id              String         @id @default(cuid())
   
-  // Public Portal Security: This UUID is the unguessable link for the candidate
   token           String         @unique @default(uuid()) 
 
-  // Candidate Information
   firstName       String
   lastName        String
   email           String
   nicNumber       String
 
-  // Employment Details
   jobPosition     String
   employmentType  EmploymentType @default(FULL_TIME)
   baseSalary      Decimal        @db.Decimal(10, 2)
   targetStartDate DateTime
 
-  // Offer Content
   offerContent    String         @db.Text
 
-  // State Management
   status          OfferStatus
 
-  // Tenant Isolation (Mandatory for your architecture)
   companyId       String
   company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
-  // Domain Relations
   departmentId    String?
   department      Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   
   createdById     String?
   createdBy       User?          @relation("OfferCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
+  completedById   String?
+  completedBy     User?      @relation("OfferCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt     DateTime?
+
   managerId       String?
   manager         EmployeeProfile? @relation("OfferManager", fields: [managerId], references: [id], onDelete: SetNull)
 
-  // Audit Trail
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   respondedAt     DateTime?      // Captures exactly when candidate clicks Accept/Decline
 
-  // Performance Optimization
   @@index([companyId])
   @@index([token])
 }

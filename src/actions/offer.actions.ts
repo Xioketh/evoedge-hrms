@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getSession } from "@/src/core/services/auth.service";
-import { createJobOffer, processCandidateResponse } from "@/src/core/services/offer.service";
+import { createJobOffer, processCandidateResponse, processOfferAcceptance } from "@/src/core/services/offer.service";
 import { CreateOfferSchema } from "../types/schemas/offer.schema";
 import { ActionState } from "../types/action.types";
 import { OfferStatus } from "@prisma/client";
@@ -20,6 +20,7 @@ export async function createOfferAction(
 
   try {
     const validatedData = CreateOfferSchema.parse(rawData);
+    console.log('upto here ok!')
     await createJobOffer(validatedData, session.companyId, session.userId);
 
     return { success: true, message: "Offer created and sent to candidate!" };
@@ -59,6 +60,26 @@ export async function respondToOfferAction(
     return {
       success: false,
       message: error.message || "Failed to process your response. Please try again.",
+    };
+  }
+}
+
+export async function convertOfferToUserAction(offerId: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.companyId) {
+      throw new Error("Unauthorized");
+    }
+
+    await processOfferAcceptance(offerId);
+    revalidatePath("/leads"); 
+    
+    return { success: true, message: "User account and Employee profile created successfully." };
+  } catch (error) {
+    console.error("Action error:", error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Failed to create user account." 
     };
   }
 }

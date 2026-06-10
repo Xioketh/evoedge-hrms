@@ -1,10 +1,10 @@
-import { db, PrismaTx } from '@/src/core/db/db.client';
+import { db, PrismaTx } from "@/src/core/db/db.client";
 
 export const CompanyRepository = {
   async createCompanyWithDepartments(
-    companyName: string, 
-    departments: string[], 
-    dbClient: PrismaTx = db
+    companyName: string,
+    departments: string[],
+    dbClient: PrismaTx = db,
   ) {
     return dbClient.company.create({
       data: {
@@ -20,5 +20,11 @@ export const CompanyRepository = {
     return dbClient.company.findUnique({
       where: { id },
     });
-  }
+  },
+  
+  async findByName(name: string, dbClient = db) {
+    return dbClient.company.findUnique({
+      where: { name },
+    });
+  },
 };

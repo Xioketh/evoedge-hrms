@@ -7,6 +7,9 @@ import { SignupInput } from "../../types/schemas/auth.schema";
 
 import { UserRepository } from "../repositories/user.repository";
 import { CompanyRepository } from "../repositories/company.repository";
+import { EmployeeRepository } from "../repositories/employee.repository";
+import { Role } from "@prisma/client";
+import { createEmployeeAccount } from "./user.service";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod",
@@ -63,7 +66,13 @@ export const registerTenant = async (data: SignupInput) => {
     throw new Error("A user with this email already exists.");
   }
 
+  const existingCompany = await CompanyRepository.findByName(data.companyName);
+  if (existingCompany) {
+    throw new Error("A company with this name already exists.");
+  }
+
   const hashedPassword = await bcrypt.hash(data.password, 12);
+  const adminRole: Role = "HR_DIRECTOR";
 
   return await db.$transaction(async (tx) => {
     const company = await CompanyRepository.createCompanyWithDepartments(
@@ -72,16 +81,16 @@ export const registerTenant = async (data: SignupInput) => {
       tx,
     );
 
-    const user = await UserRepository.createTenantAdmin(
-      {
-        email: data.email,
-        hashedPassword,
-        companyId: company.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      },
-      tx,
-    );
+    const user = await createEmployeeAccount(tx, {
+      email: data.email,
+      hashedPassword: hashedPassword,
+      companyId: company.id,
+      companyName: data.companyName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      employmentType: "FULL_TIME",
+      role: adminRole,
+    });
 
     return user;
   });

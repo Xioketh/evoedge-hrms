@@ -8,6 +8,9 @@ import { DataTable } from "@/src/components/ui/data-table";
 import { Card } from "@/src/components/ui/card";
 import { SafeJobOffer } from "@/src/types/offer.types";
 import { OfferStatusBadge } from "./OfferStatusBadge";
+import { ConfirmModal } from "@/src/components/ui/confirm-modal";
+import { toast } from "sonner";
+import { convertOfferToUserAction } from "@/src/actions/offer.actions";
 
 interface OfferDataTableProps {
   data: SafeJobOffer[];
@@ -16,6 +19,15 @@ interface OfferDataTableProps {
 }
 
 const columnHelper = createColumnHelper<SafeJobOffer>();
+
+const handleCreateUser = async (offerId: string) => {
+  const response = await convertOfferToUserAction(offerId);
+  if (response.success) {
+    toast.success(response.message);
+  } else {
+    toast.error(response.message);
+  }
+};
 
 const columns = [
   columnHelper.accessor((row) => `${row.firstName} ${row.lastName}`, {
@@ -72,7 +84,14 @@ const columns = [
         <Eye className="size-5 cursor-pointer hover:text-foreground" />
         <Download className="size-5 cursor-pointer hover:text-primary" />
         {row.original.status === "CANDIDATE_ACCEPTED" && (
-          <UserCheck className="size-5 cursor-pointer text-emerald-600 hover:text-emerald-700 transition-colors" />
+          <ConfirmModal
+            title="Create User Account"
+            description={`Are you sure you want to create an account for ${row.original.firstName} ${row.original.lastName}? This will finalize the onboarding process and mark the offer as completed.`}
+            confirmText="Create Account"
+            onConfirm={() => handleCreateUser(row.original.id)}
+          >
+            <UserCheck className="size-5 cursor-pointer text-emerald-600 hover:text-emerald-700 transition-colors" />
+          </ConfirmModal>
         )}
       </div>
     ),

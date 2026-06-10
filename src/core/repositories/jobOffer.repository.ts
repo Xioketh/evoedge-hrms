@@ -105,4 +105,25 @@ export const JobOfferRepository = {
       _count: { id: true },
     });
   },
+
+  async getOfferById(id: string, companyId: string) {
+    return db.jobOffer.findUnique({
+      where: { id, companyId }
+    });
+  },
+
+async completeOfferWithTx(
+    db: Prisma.TransactionClient, 
+    id: string, 
+    adminUserId: string
+  ) {
+    return db.jobOffer.update({
+      where: { id },
+      data: { 
+        status: "COMPLETED",
+        completedById: adminUserId,
+        completedAt: new Date(),
+      }
+    });
+  }
 };

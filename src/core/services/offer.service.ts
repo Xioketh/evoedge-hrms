@@ -13,6 +13,9 @@ import { EmployeeRepository } from "../repositories/employee.repository";
 import { CompanyRepository } from "../repositories/company.repository";
 import { formatDate, formattedOfferStatus } from "@/src/lib/formatters";
 import { getSession } from "./auth.service";
+import { createEmployeeAccount, generateSecurePassword } from "./user.service";
+import { db } from "@/src/core/db/db.client";
+import { UserRepository } from "../repositories/user.repository";
 
 type CreateOfferDTO = z.infer<typeof CreateOfferSchema>;
 
@@ -142,9 +145,9 @@ export async function getPaginatedOffers(searchParams: {
     status,
   );
 
-  const serializedOffers = data.map(offer => ({
+  const serializedOffers = data.map((offer) => ({
     ...offer,
-    baseSalary: Number(offer.baseSalary), 
+    baseSalary: Number(offer.baseSalary),
   }));
 
   return {
@@ -181,4 +184,59 @@ export async function getDashboardStats() {
   });
 
   return stats;
+}
+
+export async function processOfferAcceptance(offerId: string) {
+  const session = await getSession();
+  if (!session?.companyId || !session?.userId) throw new Error("Unauthorized");
+  const companyId = session.companyId;
+  const adminUserId = session.userId;
+
+  const offer = await JobOfferRepository.getOfferById(offerId, companyId);
+  if (!offer) throw new Error("Job offer not found or unauthorized.");
+  if (offer.status !== "CANDIDATE_ACCEPTED") {
+    throw new Error(
+      "Cannot create user: Offer is not in CANDIDATE_ACCEPTED state.",
+    );
+  }
+
+  const existingUser = await UserRepository.findByEmail(offer.email);
+  if (existingUser) {
+    throw new Error(`Cannot create account: A user with the email ${offer.email} already exists.`);
+  }
+  const company = await CompanyRepository.getCompanyById(companyId);
+  if (!company) throw new Error("Company not found.");
+
+  const { tempPassword, hashedPassword } = await generateSecurePassword();
+
+  const result = await db.$transaction(async (tx) => {
+    const user = await createEmployeeAccount(tx, {
+      email: offer.email,
+      hashedPassword: hashedPassword,
+      companyId: offer.companyId,
+      companyName: company.name,
+      firstName: offer.firstName,
+      lastName: offer.lastName,
+      departmentId: offer.departmentId,
+      managerId: offer.managerId,
+      employmentType: offer.employmentType,
+      jobTitle:offer.jobPosition,
+      baseSalary: offer.baseSalary
+    });
+
+    const updatedOffer = await JobOfferRepository.completeOfferWithTx(
+      tx,
+      offerId,
+      adminUserId,
+    );
+
+    return { user, updatedOffer };
+  });
+
+  // Optional: Trigger n8n webhook to email the user their `tempPassword`
+  console.log(
+    `User created with employee code: ${result.user.profile?.employeeCode}`,
+  );
+
+  return result;
 }

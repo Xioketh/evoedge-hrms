@@ -20,15 +20,15 @@ export async function loginAction(
     const TEST_EMAIL = "sarah.director@evoedge.com"; // Replace with your actual DB test email
     const TEST_PASSWORD = "Owner@123";   // Replace with your actual DB test password
 
-    const validUser = await verifyCredentials(
-      TEST_EMAIL,
-      TEST_PASSWORD
-    );
-
     // const validUser = await verifyCredentials(
-    //   validatedData.email,
-    //   validatedData.password,
+    //   TEST_EMAIL,
+    //   TEST_PASSWORD
     // );
+
+    const validUser = await verifyCredentials(
+      validatedData.email,
+      validatedData.password,
+    );
 
     if (!validUser) {
       return {

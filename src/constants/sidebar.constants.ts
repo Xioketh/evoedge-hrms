@@ -14,13 +14,13 @@ export const NAVIGATION_ITEMS = [
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["HR_DIRECTOR", "manager", "employee"],
+    roles: ["HR_DIRECTOR", "EMPLOYEE"],
   },
   {
     name: "Employee",
     href: "/employee",
     icon: Users,
-    roles: ["HR_DIRECTOR", "manager"],
+    roles: ["HR_DIRECTOR", "EMPLOYEE"],
   },
   {
     name: "Payroll",

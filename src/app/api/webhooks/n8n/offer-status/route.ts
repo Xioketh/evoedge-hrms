@@ -17,9 +17,8 @@ export async function POST(request: Request) {
     if (!offerId) {
       return NextResponse.json({ error: "Missing offerId" }, { status: 400 });
     }
-
     // 2. Update status based on the result from n8n
-    if (success) {
+    if (success === 'true') {
       await JobOfferRepository.updateStatus(offerId, "SENT" as OfferStatus);
     } else {
       await JobOfferRepository.updateStatus(offerId, "SEND_FAILED" as OfferStatus);
