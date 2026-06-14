@@ -12,9 +12,9 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // 2. The IDs you provided earlier
-  const departmentIds = ["cmpfbd5fh00013ckkyy1xkj5o", "cmpfbd5fu00023ckkrvwkqfa6"];
-  const createdById = "cmpfbd5il00033ckk1bjeszx5";
-  const managerId = "cmpfbd5kf000a3ckk9brb2hg2";
+  const departmentIds = ["cmq8063g20001u4v2qcao92xt", "cmq8063g20002u4v2gupxb5ut", "cmq8063g20003u4v2bo1y55bv"];
+  const createdById = "cmq8063gm0004u4v2gz3iqvlz";
+  const managerId = "cmq8063go0005u4v29e58mxud";
 
   console.log("🔍 Fetching company context...");
 

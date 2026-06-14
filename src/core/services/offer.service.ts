@@ -40,7 +40,6 @@ export async function createJobOffer(
   const portalLink = `${appUrl}/offer/${newOffer.token}`;
 
   try {
-    console.log("Triggering n8n workflow to send offer email with payload:");
     await triggerWorkflow<SendOfferPayload>(N8nWorkflow.SEND_JOB_OFFER, {
       offerId: newOffer.id,
       candidateEmail: newOffer.email,
@@ -77,9 +76,6 @@ export async function processCandidateResponse(
   status: OfferStatus,
 ) {
   const offer = await JobOfferRepository.findByToken(token);
-
-  console.log(`Processing candidate response for token:`, offer);
-
   if (!offer) {
     throw new Error("Offer not found.");
   }
@@ -114,7 +110,6 @@ export async function processCandidateResponse(
       notifyEmails: Array.from(emailsToNotify),
     };
 
-    console.log(`Triggering n8n workflow for response:`, payload);
     await triggerWorkflow(N8nWorkflow.OFFER_RESPONDED, payload);
   } catch (error) {
     console.error(
@@ -232,11 +227,6 @@ export async function processOfferAcceptance(offerId: string) {
 
     return { user, updatedOffer };
   });
-
-  // Optional: Trigger n8n webhook to email the user their `tempPassword`
-  console.log(
-    `User created with employee code: ${result.user.profile?.employeeCode}`,
-  );
 
   return result;
 }

@@ -15,7 +15,6 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
 
   const { id: targetUserId } = await params;
 
-  // 👇 SECURITY GUARD: If employee tries viewing someone else's ID, deny access!
   if (session.role === Role.EMPLOYEE && session.userId !== targetUserId) {
     redirect(`/employee/${session.userId}`); 
   }

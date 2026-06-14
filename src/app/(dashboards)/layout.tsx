@@ -4,6 +4,7 @@ import { Sidebar } from "@/src/components/layout/Sidebar";
 import { Header } from "@/src/components/layout/Header";
 import { PageHeader } from "@/src/components/layout/PageHeader";
 import { getSession } from "@/src/core/services/auth.service";
+import { Role } from "@prisma/client";
 
 export default async function DashboardLayout({
   children,
@@ -15,7 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="fixed inset-0 flex bg-background">
-      <Sidebar userRole={session.role} />
+      <Sidebar userRole={session.role as Role} userId={session.userId}/>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header session={session} />

@@ -20,7 +20,6 @@ export async function createOfferAction(
 
   try {
     const validatedData = CreateOfferSchema.parse(rawData);
-    console.log('upto here ok!')
     await createJobOffer(validatedData, session.companyId, session.userId);
 
     return { success: true, message: "Offer created and sent to candidate!" };
