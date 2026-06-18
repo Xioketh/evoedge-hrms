@@ -74,6 +74,7 @@ CREATE TABLE "JobOffer" (
     "baseSalary" DECIMAL(10,2) NOT NULL,
     "targetStartDate" TIMESTAMP(3) NOT NULL,
     "offerContent" TEXT NOT NULL,
+    "s3ObjectKey" TEXT,
     "status" "OfferStatus" NOT NULL,
     "companyId" TEXT NOT NULL,
     "departmentId" TEXT,

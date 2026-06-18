@@ -129,6 +129,8 @@ model JobOffer {
 
   offerContent    String         @db.Text
 
+  s3ObjectKey     String?
+
   status          OfferStatus
 
   companyId       String

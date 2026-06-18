@@ -2,9 +2,36 @@ import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 import { Text } from "@/src/components/ui/text";
 import { formatDate, formatEmploymentType } from "@/src/lib/formatters";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { getPublicOfferDownloadUrlAction } from "@/src/actions/offer.actions";
+import { toast } from "sonner";
 
 export function OfferDocument({ offer }: { offer: any }) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await getPublicOfferDownloadUrlAction(offer.token);
+      if (response.success && response.url) {
+        const a = document.createElement("a");
+        a.href = response.url;
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        toast.error(response.message || "Failed to download document");
+      }
+    } catch (error) {
+      toast.error("An error occurred while downloading");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  console.log("offer", offer);
   const offerDetails = [
     {
       label: "Position Title",
@@ -27,9 +54,13 @@ export function OfferDocument({ offer }: { offer: any }) {
   return (
     <Card className="w-full bg-white md:p-7 border-gray-200">
       <div className="flex justify-end w-full">
-        <Button type="button" variant="muted" size="sm">
-          <Download className="w-4 h-4 mr-2" />
-          Download PDF
+        <Button type="button" variant="muted" size="sm" onClick={handleDownload} disabled={isDownloading}>
+          {isDownloading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4 mr-2" />
+          )}
+          {isDownloading ? "Downloading..." : "Download PDF"}
         </Button>
       </div>
       <div className="space-y-8">

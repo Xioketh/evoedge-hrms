@@ -125,5 +125,12 @@ async completeOfferWithTx(
         completedAt: new Date(),
       }
     });
-  }
+  },
+
+  async updateS3Key(offerId: string, s3Key: string) {
+  return await db.jobOffer.update({
+    where: { id: offerId },
+    data: { s3ObjectKey: s3Key },
+  });
+}
 };

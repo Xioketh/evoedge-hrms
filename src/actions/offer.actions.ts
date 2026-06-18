@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getSession } from "@/src/core/services/auth.service";
-import { createJobOffer, processCandidateResponse, processOfferAcceptance } from "@/src/core/services/offer.service";
+import { createJobOffer, processCandidateResponse, processOfferAcceptance, getPublicOfferDownloadUrl, getSecureOfferDownloadUrl } from "@/src/core/services/offer.service";
 import { CreateOfferSchema } from "../types/schemas/offer.schema";
 import { ActionState } from "../types/action.types";
 import { OfferStatus } from "@prisma/client";
@@ -82,3 +82,28 @@ export async function convertOfferToUserAction(offerId: string) {
     };
   }
 }
+
+export async function getPublicOfferDownloadUrlAction(token: string) {
+  try {
+    const url = await getPublicOfferDownloadUrl(token);
+    return { success: true, url };
+  } catch (error: any) {
+    console.error("Public download error:", error);
+    return { success: false, message: error.message || "Failed to generate download link." };
+  }
+}
+
+export async function getSecureOfferDownloadUrlAction(offerId: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.companyId) {
+      return { success: false, message: "Unauthorized" };
+    }
+    
+    const url = await getSecureOfferDownloadUrl(offerId, session.companyId);
+    return { success: true, url };
+  } catch (error: any) {
+    console.error("Secure download error:", error);
+    return { success: false, message: error.message || "Failed to generate download link." };
+  }
+}

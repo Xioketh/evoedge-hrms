@@ -10,7 +10,7 @@ import { SafeJobOffer } from "@/src/types/offer.types";
 import { OfferStatusBadge } from "./OfferStatusBadge";
 import { ConfirmModal } from "@/src/components/ui/confirm-modal";
 import { toast } from "sonner";
-import { convertOfferToUserAction } from "@/src/actions/offer.actions";
+import { convertOfferToUserAction, getSecureOfferDownloadUrlAction } from "@/src/actions/offer.actions";
 
 interface OfferDataTableProps {
   data: SafeJobOffer[];
@@ -26,6 +26,26 @@ const handleCreateUser = async (offerId: string) => {
     toast.success(response.message);
   } else {
     toast.error(response.message);
+  }
+};
+
+const handleDownloadOffer = async (offerId: string) => {
+  const loadingToast = toast.loading("Preparing download...");
+  try {
+    const response = await getSecureOfferDownloadUrlAction(offerId);
+    if (response.success && response.url) {
+      toast.dismiss(loadingToast);
+      const a = document.createElement("a");
+      a.href = response.url;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      toast.error(response.message || "Failed to download document", { id: loadingToast });
+    }
+  } catch (error) {
+    toast.error("An error occurred while downloading", { id: loadingToast });
   }
 };
 
@@ -82,7 +102,10 @@ const columns = [
     cell: ({ row }) => (
       <div className="flex gap-3 text-muted-foreground">
         <Eye className="size-5 cursor-pointer hover:text-foreground" />
-        <Download className="size-5 cursor-pointer hover:text-primary" />
+        <Download 
+          className="size-5 cursor-pointer hover:text-primary" 
+          onClick={() => handleDownloadOffer(row.original.id)}
+        />
         {row.original.status === "CANDIDATE_ACCEPTED" && (
           <ConfirmModal
             title="Create User Account"

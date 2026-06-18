@@ -16,6 +16,9 @@ import { getSession } from "./auth.service";
 import { createEmployeeAccount, generateSecurePassword } from "./user.service";
 import { db } from "@/src/core/db/db.client";
 import { UserRepository } from "../repositories/user.repository";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { uploadOfferPdfToS3, getPresignedPdfUrl } from "./s3.service";
+import { OfferLetterTemplate } from "../pdf/OfferLetterTemplate";
 
 type CreateOfferDTO = z.infer<typeof CreateOfferSchema>;
 
@@ -36,10 +39,20 @@ export async function createJobOffer(
   const newOffer = await JobOfferRepository.create(data, companyId, creatorId);
   const company = await CompanyRepository.getCompanyById(companyId);
 
+  const companyName = company?.name || "Our Company";
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const portalLink = `${appUrl}/offer/${newOffer.token}`;
 
   try {
+
+    const pdfBuffer = await renderToBuffer(
+      OfferLetterTemplate({ offer: newOffer, companyName })
+    );
+
+    const s3Key = await uploadOfferPdfToS3(pdfBuffer, newOffer.id);
+    await JobOfferRepository.updateS3Key(newOffer.id, s3Key);
+
     await triggerWorkflow<SendOfferPayload>(N8nWorkflow.SEND_JOB_OFFER, {
       offerId: newOffer.id,
       candidateEmail: newOffer.email,
@@ -215,7 +228,7 @@ export async function processOfferAcceptance(offerId: string) {
       departmentId: offer.departmentId,
       managerId: offer.managerId,
       employmentType: offer.employmentType,
-      jobTitle:offer.jobPosition,
+      jobTitle: offer.jobPosition,
       baseSalary: offer.baseSalary
     });
 
@@ -229,4 +242,23 @@ export async function processOfferAcceptance(offerId: string) {
   });
 
   return result;
+}
+
+async function generateUrlForOffer(offer: { s3ObjectKey: string | null; firstName: string; lastName: string } | null) {
+  if (!offer || !offer.s3ObjectKey) {
+    throw new Error("Offer document not found.");
+  }
+  
+  const filename = `Offer_Letter_${offer.firstName}_${offer.lastName}.pdf`.replace(/\s+/g, "_");
+  return await getPresignedPdfUrl(offer.s3ObjectKey, filename);
+}
+
+export async function getPublicOfferDownloadUrl(token: string) {
+  const offer = await JobOfferRepository.findByToken(token);
+  return await generateUrlForOffer(offer);
+}
+
+export async function getSecureOfferDownloadUrl(offerId: string, companyId: string) {
+  const offer = await JobOfferRepository.getOfferById(offerId, companyId);
+  return await generateUrlForOffer(offer);
 }
