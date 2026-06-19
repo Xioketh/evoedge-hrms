@@ -103,4 +103,28 @@ export const EmployeeRepository = {
       },
     });
   },
+
+  async updateEmployeeDetails(
+    userId: string,
+    companyId: string,
+    data: { email?: string; employeeCode?: string },
+    dbClient: PrismaTx = db,
+  ) {
+    return dbClient.user.update({
+      where: {
+        id: userId,
+        companyId,
+      },
+      data: {
+        ...(data.email && { email: data.email }),
+        ...(data.employeeCode && {
+          profile: {
+            update: {
+              employeeCode: data.employeeCode,
+            },
+          },
+        }),
+      },
+    });
+  },
 };

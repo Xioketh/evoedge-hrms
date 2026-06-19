@@ -8,6 +8,7 @@ import { DataTable } from "@/src/components/ui/data-table";
 import { Card } from "@/src/components/ui/card";
 import { SafeJobOffer } from "@/src/types/offer.types";
 import { OfferStatusBadge } from "./OfferStatusBadge";
+import { OfferDetailDialog } from "./OfferDetailDialog";
 import { ConfirmModal } from "@/src/components/ui/confirm-modal";
 import { toast } from "sonner";
 import { convertOfferToUserAction, getSecureOfferDownloadUrlAction } from "@/src/actions/offer.actions";
@@ -101,9 +102,11 @@ const columns = [
     header: "ACTIONS",
     cell: ({ row }) => (
       <div className="flex gap-3 text-muted-foreground">
-        <Eye className="size-5 cursor-pointer hover:text-foreground" />
-        <Download 
-          className="size-5 cursor-pointer hover:text-primary" 
+        <OfferDetailDialog offer={row.original}>
+          <Eye className="size-5 cursor-pointer hover:text-foreground" />
+        </OfferDetailDialog>
+        <Download
+          className="size-5 cursor-pointer hover:text-primary"
           onClick={() => handleDownloadOffer(row.original.id)}
         />
         {row.original.status === "CANDIDATE_ACCEPTED" && (
@@ -126,6 +129,7 @@ export function OfferDataTable({
   metadata,
   currentSearch,
 }: OfferDataTableProps) {
+  console.log('data', data)
   return (
     <Card>
       <DataTable

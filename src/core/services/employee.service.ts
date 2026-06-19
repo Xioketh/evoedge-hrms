@@ -63,3 +63,31 @@ export async function getEmployeeProfileByUserId(userId: string, companyId: stri
       : "No Reporter",
   };
 }
+
+export async function updateEmployee(
+  userId: string,
+  companyId: string,
+  data: { email?: string; employeeCode?: string }
+) {
+  try {
+    const updatedUser = await EmployeeRepository.updateEmployeeDetails(
+      userId,
+      companyId,
+      data
+    );
+    return { success: true, data: updatedUser };
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      const target = error.meta?.target as string[] | string;
+      if (target?.includes('email')) {
+        return { success: false, error: 'Email is already in use.' };
+      }
+      if (target?.includes('employeeCode')) {
+        return { success: false, error: 'Employee ID is already in use.' };
+      }
+      return { success: false, error: 'A unique constraint failed.' };
+    }
+    console.error('[UPDATE_EMPLOYEE_ERROR]', error);
+    return { success: false, error: 'Failed to update employee details.' };
+  }
+}

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Text } from "@/src/components/ui/text";
+import { EditEmployeeModal } from "./_components/edit-employee-modal";
 
 interface EmployeeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -19,7 +20,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
   const { id: targetUserId } = await params;
 
   if (session.role === Role.EMPLOYEE && session.userId !== targetUserId) {
-    redirect(`/employee/${session.userId}`); 
+    redirect(`/employee/${session.userId}`);
   }
 
   const employee = await getEmployeeProfileByUserId(targetUserId, session.companyId);
@@ -81,12 +82,13 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
               </div>
             </div>
           </div>
-          
           <div className="flex gap-2 w-full md:w-auto">
             {session.role !== Role.EMPLOYEE && (
-              <Button>
-                Edit Details
-              </Button>
+              <EditEmployeeModal
+                userId={employee.id}
+                email={employee.email}
+                employeeCode={employee.employeeCode || ""}
+              />
             )}
           </div>
         </CardContent>
@@ -97,12 +99,12 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         {metaIndicators.map((indicator, index) => (
           <Card key={index} className="bg-dark">
             <CardContent className="pt-6">
-              <Text className="text-xs font-bold tracking-wider uppercase" color="muted">
+              <Text className="tracking-wider uppercase" color="muted">
                 {indicator.label}
               </Text>
               <div className={`flex items-center gap-2 mt-1 ${indicator.truncate ? 'truncate' : ''}`}>
                 <indicator.icon className="size-4 text-muted-foreground shrink-0" />
-                <Text className={indicator.truncate ? 'truncate' : undefined}>{indicator.value}</Text>
+                <Text size={'2'} className={indicator.truncate ? 'truncate' : undefined}>{indicator.value}</Text>
               </div>
             </CardContent>
           </Card>

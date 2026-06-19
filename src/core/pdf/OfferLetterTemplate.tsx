@@ -90,25 +90,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: theme.foreground,
   },
-  signatureContainer: {
-    marginTop: 40,
-  },
-  signatureLine: {
-    width: 200,
-    borderTopWidth: 1,
-    borderTopColor: theme.foreground,
-    marginTop: 50,
-    marginBottom: 8,
-  },
-  signatureName: {
-    fontSize: 12,
-    color: theme.foreground,
-    fontWeight: "bold",
-  },
-  signatureTitle: {
-    fontSize: 10,
-    color: theme.muted,
-  },
   footer: {
     position: "absolute",
     bottom: 40,
@@ -168,12 +149,6 @@ export const OfferLetterTemplate = ({ offer, companyName }: { offer: JobOffer, c
         <Text style={styles.paragraph}>
           We look forward to welcoming you aboard and achieving great things together.
         </Text>
-      </View>
-
-      <View style={styles.signatureContainer}>
-        <View style={styles.signatureLine} />
-        <Text style={styles.signatureName}>Authorized Signatory</Text>
-        <Text style={styles.signatureTitle}>{companyName}</Text>
       </View>
 
       <View style={styles.footer}>
