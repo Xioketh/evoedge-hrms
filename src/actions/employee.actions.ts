@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/src/core/services/auth.service";
-import { updateEmployee } from "@/src/core/services/employee.service";
+import { updateEmployee, uploadEmployeeCv, getEmployeeCvDownloadUrl } from "@/src/core/services/employee.service";
 import { Role } from "@prisma/client";
 
 export async function updateEmployeeAction(
@@ -41,4 +41,40 @@ export async function updateEmployeeAction(
   revalidatePath(`/employee/${userId}`);
 
   return { success: true, message: "Employee details updated successfully" };
+}
+
+export async function uploadCvAction(
+  prevState: any,
+  formData: FormData,
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  const session = await getSession();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const userId = formData.get("userId") as string;
+  const file = formData.get("cv") as File;
+
+  if (!userId || !file || file.size === 0) {
+    return { success: false, error: "Please select a PDF file to upload." };
+  }
+
+  try {
+    await uploadEmployeeCv(userId, session.companyId, file);
+    revalidatePath(`/employee/${userId}`);
+    return { success: true, message: "CV uploaded successfully" };
+  } catch (e: any) {
+    return { success: false, error: e.message || "Upload failed" };
+  }
+}
+
+export async function getCvDownloadUrlAction(userId: string) {
+  const session = await getSession();
+  if (!session) return { success: false, message: "Unauthorized" };
+
+  try {
+    const url = await getEmployeeCvDownloadUrl(userId, session.companyId);
+    return { success: true, url };
+  } catch (e: any) {
+    console.error("[CV_DOWNLOAD_ERROR]", e);
+    return { success: false, message: e.message || "Failed to generate download link." };
+  }
 }

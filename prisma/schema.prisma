@@ -108,6 +108,9 @@ model EmployeeProfile {
   subordinates EmployeeProfile[] @relation("ReportingLine")
   managedOffers JobOffer[] @relation("OfferManager")
 
+  cvS3Key        String?   // S3 object key for the uploaded CV
+  cvOriginalName String?   // Original filename preserved for download UX
+
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }

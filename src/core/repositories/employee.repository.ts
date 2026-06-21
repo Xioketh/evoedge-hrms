@@ -127,4 +127,39 @@ export const EmployeeRepository = {
       },
     });
   },
+
+  async updateCv(
+    userId: string,
+    companyId: string,
+    data: { cvS3Key: string; cvOriginalName: string },
+    dbClient: PrismaTx = db,
+  ) {
+    return dbClient.user.update({
+      where: { id: userId, companyId },
+      data: {
+        profile: {
+          update: {
+            cvS3Key: data.cvS3Key,
+            cvOriginalName: data.cvOriginalName,
+          },
+        },
+      },
+    });
+  },
+
+  async getCvDetails(
+    userId: string,
+    companyId: string,
+    dbClient: PrismaTx = db,
+  ) {
+    const user = await dbClient.user.findFirst({
+      where: { id: userId, companyId },
+      select: {
+        profile: {
+          select: { cvS3Key: true, cvOriginalName: true },
+        },
+      },
+    });
+    return user?.profile ?? null;
+  },
 };

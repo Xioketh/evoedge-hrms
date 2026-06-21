@@ -46,7 +46,7 @@ export function EditEmployeeModal({ userId, email, employeeCode }: EditEmployeeM
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Edit Details</Button>
+        <Button size="sm">Edit Details</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

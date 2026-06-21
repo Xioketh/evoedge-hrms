@@ -8,6 +8,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Text } from "@/src/components/ui/text";
 import { EditEmployeeModal } from "./_components/edit-employee-modal";
+import { EmployeeCvCard } from "./_components/employee-cv-card";
 
 interface EmployeeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -110,6 +111,13 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           </Card>
         ))}
       </div>
+
+      {/* CV Upload / Download */}
+      <EmployeeCvCard
+        userId={employee.id}
+        hasCv={employee.hasCv}
+        cvOriginalName={employee.cvOriginalName}
+      />
     </div>
   );
 }

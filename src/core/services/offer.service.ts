@@ -17,7 +17,7 @@ import { createEmployeeAccount, generateSecurePassword } from "./user.service";
 import { db } from "@/src/core/db/db.client";
 import { UserRepository } from "../repositories/user.repository";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { uploadOfferPdfToS3, getPresignedPdfUrl } from "./s3.service";
+import { uploadToS3, getPresignedUrl } from "./s3.service";
 import { OfferLetterTemplate } from "../pdf/OfferLetterTemplate";
 
 type CreateOfferDTO = z.infer<typeof CreateOfferSchema>;
@@ -50,7 +50,8 @@ export async function createJobOffer(
       OfferLetterTemplate({ offer: newOffer, companyName })
     );
 
-    const s3Key = await uploadOfferPdfToS3(pdfBuffer, newOffer.id);
+    const datePath = new Date().toISOString().slice(0, 7);
+    const s3Key = await uploadToS3(pdfBuffer, `offers/${datePath}/offer-${newOffer.id}.pdf`, "application/pdf");
     await JobOfferRepository.updateS3Key(newOffer.id, s3Key);
 
     await triggerWorkflow<SendOfferPayload>(N8nWorkflow.SEND_JOB_OFFER, {
@@ -250,7 +251,7 @@ async function generateUrlForOffer(offer: { s3ObjectKey: string | null; firstNam
   }
   
   const filename = `Offer_Letter_${offer.firstName}_${offer.lastName}.pdf`.replace(/\s+/g, "_");
-  return await getPresignedPdfUrl(offer.s3ObjectKey, filename);
+  return await getPresignedUrl(offer.s3ObjectKey, filename);
 }
 
 export async function getPublicOfferDownloadUrl(token: string) {

@@ -1,5 +1,6 @@
 import { EmployeeListItem } from "@/src/types/employee.types";
 import { EmployeeRepository } from "../repositories/employee.repository";
+import { uploadToS3, getPresignedUrl } from "./s3.service";
 
 export async function getPaginatedEmployees(params: {
   companyId: string;
@@ -61,6 +62,8 @@ export async function getEmployeeProfileByUserId(userId: string, companyId: stri
     managerName: user.profile?.manager 
       ? `${user.profile.manager.firstName} ${user.profile.manager.lastName}`
       : "No Reporter",
+    hasCv: !!user.profile?.cvS3Key,
+    cvOriginalName: user.profile?.cvOriginalName ?? null,
   };
 }
 
@@ -90,4 +93,42 @@ export async function updateEmployee(
     console.error('[UPDATE_EMPLOYEE_ERROR]', error);
     return { success: false, error: 'Failed to update employee details.' };
   }
+}
+
+const CV_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const CV_ALLOWED_TYPES = ["application/pdf"];
+
+export async function uploadEmployeeCv(
+  userId: string,
+  companyId: string,
+  file: File,
+) {
+  if (!CV_ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Only PDF files are accepted.");
+  }
+  if (file.size > CV_MAX_SIZE) {
+    throw new Error("File size exceeds the 5 MB limit.");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const datePath = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const s3Key = `employees/${userId}/cv/${datePath}/${safeName}`;
+
+  await uploadToS3(buffer, s3Key, file.type);
+  await EmployeeRepository.updateCv(userId, companyId, {
+    cvS3Key: s3Key,
+    cvOriginalName: file.name,
+  });
+}
+
+export async function getEmployeeCvDownloadUrl(
+  userId: string,
+  companyId: string,
+) {
+  const cv = await EmployeeRepository.getCvDetails(userId, companyId);
+  if (!cv?.cvS3Key) {
+    throw new Error("No CV has been uploaded for this employee.");
+  }
+  return getPresignedUrl(cv.cvS3Key, cv.cvOriginalName ?? "cv.pdf");
 }
