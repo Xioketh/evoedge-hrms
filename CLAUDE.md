@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **Next.js version warning (from AGENTS.md):** This repo uses Next.js 16 + React 19. APIs and conventions may differ from training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing framework-level code.
 
+> **Breaking change — page `params` is a Promise:** In Next.js 16, dynamic route params are async. Always `await params` before accessing properties: `const { id } = await params`. Skipping the `await` causes a runtime error.
+
 ## Commands
 
 ```bash
@@ -33,7 +35,7 @@ Multi-tenant HRMS. Every domain row is scoped by `companyId` (the tenant); alway
 - **`src/actions/*.actions.ts`** — `"use server"` Server Actions. Entry point for all mutations from the UI. Responsibilities: auth check via `getSession()`, validate `FormData` with a Zod schema, call a service, `revalidatePath()`, and return an `ActionState` (`{ success, message?, fieldErrors?, inputs? }`). Catch `z.ZodError` and return `error.flatten().fieldErrors`. Never put business logic here.
 - **`src/core/services/*.service.ts`** — Business logic, transactions (`db.$transaction`), orchestration of repositories + external integrations (S3, n8n, PDF). Services re-check the session and enforce tenant/role rules. `Decimal` fields must be serialized to `Number` before crossing to client components.
 - **`src/core/repositories/*.repository.ts`** — Exported as plain object literals with async methods (e.g. `JobOfferRepository.create`). The only place that touches `db`. Methods accept an optional `Prisma.TransactionClient` when they participate in a transaction (see `completeOfferWithTx`).
-- **`src/core/db/db.client.ts`** — Singleton `db` PrismaClient using the `@prisma/adapter-pg` driver adapter over a `pg.Pool`. Import `db` from here; never instantiate PrismaClient elsewhere (seeds are the exception).
+- **`src/core/db/db.client.ts`** — Singleton `db` PrismaClient using the `@prisma/adapter-pg` driver adapter over a `pg.Pool`. Import `db` from here; never instantiate PrismaClient elsewhere (seeds are the exception). Also exports `PrismaTx` — the type for a Prisma transaction client. Repository methods accept it as an optional last parameter (defaulting to `db`) so services can pass `tx` inside a `db.$transaction` block.
 
 ### Auth & authorization
 
@@ -59,11 +61,21 @@ Multi-tenant HRMS. Every domain row is scoped by `companyId` (the tenant); alway
 
 `OfferStatus`: `QUEUED → SENT → CANDIDATE_ACCEPTED/CANDIDATE_DECLINED`, with `DRAFT`, `SEND_FAILED`, `EXPIRED`, `CANCELLED`, and terminal `COMPLETED`. Services guard transitions (e.g. `processCandidateResponse` only acts on `SENT`; `processOfferAcceptance` only on `CANDIDATE_ACCEPTED`). Completing an offer creates the user account inside a transaction and stamps `completedBy`/`completedAt`.
 
+### Employee code generation
+
+Employee codes are auto-generated on offer completion (inside the `processOfferAcceptance` transaction). Format: `{CO}_{ROLE}_{SEQ}` — e.g. `EVO_EMP_00011`. `CO` is the first 3 chars of the company name, uppercased. `ROLE` prefixes live in `src/core/utils/employee-code.ts` (e.g. `EMP`, `HRD`, `TRS`). `SEQ` is a zero-padded 5-digit counter per company+role pair, derived by querying the highest existing code with that prefix.
+
+### Domain naming note
+
+The `/lead` route and "Lead Management" terminology refers to the **job offer pipeline** (candidates receiving offer letters), not traditional CRM leads. `HR_DIRECTOR` is intentionally excluded from the employee directory listing (`findPaginatedWithCount` filters `role: { not: HR_DIRECTOR }`). Employees can only view their own profile at `/employee/[id]`; accessing another employee's profile redirects them to their own.
+
 ### Conventions
 
 - Import alias `@/*` maps to repo root, so imports look like `@/src/core/services/...`.
 - Frontend code under `src/components/features/<domain>/` and `src/components/ui/` (shadcn). Domain-specific components colocated in route folders as `_components/`.
 - Zod schemas in `src/types/schemas/`, shared types in `src/types/`.
+- `ActionState<T>` (`src/types/action.types.ts`) is the canonical return type for Server Actions. Some actions return ad-hoc shapes instead — prefer `ActionState` for new actions.
+- S3 key conventions: offers → `offers/<YYYY-MM>/offer-<id>.pdf`; employee CVs → `employees/<userId>/cv/<YYYY-MM>/<safeName>`.
 
 ## Environment variables
 

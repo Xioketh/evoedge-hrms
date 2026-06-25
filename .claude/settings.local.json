@@ -1,0 +1,22 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Read|Grep",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node ./hooks/read_hook.js"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": []
+    },
+    "permissions": {
+        "allow": [
+            "mcp__playwright"
+        ],
+        "deny": []
+    }
+}
