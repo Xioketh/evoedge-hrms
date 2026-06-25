@@ -5,11 +5,10 @@ import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/src/components/ui/dialog";
 import { Input } from "@/src/components/ui/input";
 import { Text } from "@/src/components/ui/text";
